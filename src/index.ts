@@ -24,7 +24,8 @@ app.whenReady().then(async () => {
         webPreferences: {
             preload: __dirname + '/preload.js',
             nodeIntegration: true
-        }
+        },
+        skipTaskbar: true
     });
     mainWindow.setMenu(null);
 
