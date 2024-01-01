@@ -1,4 +1,4 @@
-import { BrowserWindow, app, ipcMain, dialog } from 'electron';
+import { BrowserWindow, app, ipcMain, dialog, Tray, Menu } from 'electron';
 import Store from 'electron-store';
 import launchWrapper from './launchWrapper';
 import { basename, extname, join } from 'path';
@@ -28,6 +28,27 @@ app.whenReady().then(async () => {
         skipTaskbar: true
     });
     mainWindow.setMenu(null);
+
+    let tray: Tray;
+
+    function createTray() {
+        tray = new Tray(join(__dirname, '../tray.png'));
+        tray.setTitle('SteelSeries GG');
+        tray.setContextMenu(Menu.buildFromTemplate([
+            { label: 'Show/Hide', click: () => {
+                let visible = mainWindow.isVisible();
+
+                for(let window of BrowserWindow.getAllWindows()) {
+                    if(visible) window.hide();
+                    else window.show();
+                }
+
+                if(tray) tray.destroy();
+                createTray();
+            } }
+        ]));
+    }
+    createTray();
 
     mainWindow.loadFile('html/index.html');
     ipcMain.handle('pick-folder', async () => {
@@ -241,7 +262,8 @@ function doLaunch(info: any, launchWindow: BrowserWindow) {
                 let exeName = executables[0].name;
 
                 spawn(join(copyTo, exeName), launchArgs, {
-                    stdio: debug ? 'inherit' : 'ignore'
+                    stdio: debug ? 'inherit' : 'ignore',
+                    detached: !debug
                 }).unref();
             }
 
